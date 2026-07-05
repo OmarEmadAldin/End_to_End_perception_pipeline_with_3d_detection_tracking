@@ -38,5 +38,8 @@ detector.imgs_to_gif( folder="output", output_gif="result.gif", fps=30 )
 ```
 In which we use **FFmpeg** command
 ## Result
-![Output](output/output.gif)
+
+<p align="center">
+  <img src="output/output.gif" width="400" alt="YOLO Detection Output">
+</p>
 
