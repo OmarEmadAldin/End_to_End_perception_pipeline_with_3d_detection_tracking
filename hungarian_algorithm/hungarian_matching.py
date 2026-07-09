@@ -39,11 +39,15 @@ class CrossSensorFusion:
                 'lidar_y'    : None,
                 'lidar_score': None,
                 'lidar_px_dist': None,
-                # Radar match (position + velocity)
+                # Radar match — Cartesian (for Linear KF)
                 'radar_x'    : None,
                 'radar_y'    : None,
                 'radar_vx'   : None,
                 'radar_vy'   : None,
+                # Radar match — native polar/Doppler (for EKF)
+                'radar_rho'   : None,
+                'radar_phi'   : None,
+                'radar_rhodot': None,
                 'radar_px_dist': None,
             }
             if i in lidar_matches:
@@ -59,6 +63,9 @@ class CrossSensorFusion:
                 obj['radar_y']    = rp['y']
                 obj['radar_vx']   = rp['vx']
                 obj['radar_vy']   = rp['vy']
+                obj['radar_rho']    = rp.get('rho')
+                obj['radar_phi']    = rp.get('phi')
+                obj['radar_rhodot'] = rp.get('rhodot')
                 obj['radar_px_dist'] = dist
 
             fused.append(obj)
