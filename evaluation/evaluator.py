@@ -19,9 +19,9 @@ class Evaluator:
 
     def _load_ground_truth(self):
         samples     = self._load('/home/omar_ben_emad/3d_object_detection_and_tracking/data/v1.0-mini/Calibration Files/sample.json')
-        annotations = self._load('/home/omar_ben_emad/3d_object_detection_and_tracking/data/v1.0-mini/Calibration_Files/sample_annotation.json')
-        instances   = self._load('/home/omar_ben_emad/3d_object_detection_and_tracking/data/v1.0-mini/Calibration_Files/instance.json')
-        categories  = self._load('/home/omar_ben_emad/3d_object_detection_and_tracking/data/v1.0-mini/Calibration_Files/category.json')
+        annotations = self._load('/home/omar_ben_emad/3d_object_detection_and_tracking/data/v1.0-mini/Calibration Files/sample_annotation.json')
+        instances   = self._load('/home/omar_ben_emad/3d_object_detection_and_tracking/data/v1.0-mini/Calibration Files/instance.json')
+        categories  = self._load('/home/omar_ben_emad/3d_object_detection_and_tracking/data/v1.0-mini/Calibration Files/category.json')
 
         cat_by_token  = {c['token']: c['name'] for c in categories}
         inst_by_token = {i['token']: i for i in instances}
