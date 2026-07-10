@@ -226,7 +226,7 @@ Runs a **PointPillars** 3D object detector (via `mmdetection3d`'s `init_model` /
     <td align="center"><b>3D Detection</b></td>
   </tr>
   <tr>
-    <td><img src="lidar_3d_det/output/output__.gif" width="30%" alt="Image 2"></td>
+    <td><img src="lidar_3d_det/output/output__.gif" width="50%" alt="Image 2"></td>
     <td><img src="lidar_3d_det/output/out.gif" width="60%" alt="Image 3"></td>
   </tr>
 </table>
