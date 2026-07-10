@@ -1,0 +1,17 @@
+numpy==1.24.4
+scipy==1.10.1
+pandas==1.5.3
+matplotlib==3.7.5
+opencv-python==4.8.1.78
+tqdm==4.66.4
+pillow==10.3.0
+torch==2.0.1
+torchvision==0.15.2
+ultralytics==8.0.196
+transformers==4.36.2
+open3d==0.18.0
+nuscenes-devkit==1.1.11
+mmengine==0.10.3
+mmcv==2.0.0
+mmdet==3.0.0
+mmdet3d==1.1.0
