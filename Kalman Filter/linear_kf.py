@@ -25,6 +25,12 @@ class LinearKalmanFilter:
             5.0**2,   # vy uncertainty
         ])
 
+        self.history = {
+            "predicted": [],
+            "measurement": [],
+            "residual": []
+        }
+
     def predict(self, dt):
         if dt <= 0:
             return
@@ -57,20 +63,33 @@ class LinearKalmanFilter:
             x̂  = x̂ + K · y           corrected state
             P  = (I − K · C) · P     corrected covariance (uncertainty reduced)
          """
-        y  = z - C @ self.x
+        x_pred = self.x.copy()
+        
+        z_pred = C @ self.x
+        y  = z - z_pred
         S  = C @ self.P @ C.T + R
         K  = self.P @ C.T @ np.linalg.inv(S)
 
         self.x = self.x + K @ y
         self.P = (np.eye(4) - K @ C) @ self.P
+        
+        
+        x_upd = self.x.copy()
+        residual_state = x_upd - x_pred
+
+        self.history["predicted"].append(x_pred)
+        self.history["measurement"].append(x_upd)
+        self.history["residual"].append(residual_state)
 
     def update_lidar(self, px, py):
         self.update(np.array([px, py]), C_LIDAR, R_LIDAR)
 
     def update_radar(self, px, py, vx, vy):
         self.update(np.array([px, py, vx, vy]), C_RADAR, R_RADAR)
+    
+    def get_history(self):
+        return self.history
 
-    # property is a getter attribute method
     @property
     def position(self):
         return self.x[:2].copy()

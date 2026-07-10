@@ -202,3 +202,77 @@ P = (I − K · H) · P (Error update)
 
 
 ```
+
+# Kalman Filter — Extended (EKF)
+### `kalman_filter/extended_kf.py`
+
+The Extended Kalman Filter (EKF) tracks **one object** over time when the measurement model is **nonlinear** (e.g., radar in polar coordinates).Uses Jacobian instead of fixed matrix
+It follows the same structure as the linear KF:
+
+PREDICT:
+    x̂ = A · x
+    P  = A · P · Aᵀ + Q
+
+UPDATE (nonlinear):
+    ẑ = h(x̂)
+    y  = z − ẑ
+    H  = Jacobian of h(x)
+    S  = H · P · Hᵀ + R
+    K  = P · Hᵀ · S⁻¹
+    x̂ = x̂ + K · y
+    P  = (I − K · H) · P
+
+
+
+## 2. State Vector
+
+        x = [px, py, vx, vy]ᵀ
+
+---
+
+## 3. Nonlinear Radar Model
+
+        ρ     = √(px² + py²)  
+        φ     = atan2(py, px)  
+        ρ̇ = (px·vx + py·vy) / ρ  
+
+---
+
+## 4. Jacobian Matrix
+
+        H =
+        [
+        px/ρ      py/ρ      0        0
+        -py/ρ²     px/ρ²     0        0
+        (vx·py² - vy·px·py)/ρ³   (vy·px² - vx·px·py)/ρ³   px/ρ   py/ρ
+        ]
+
+---
+
+## 5. Radar Update
+
+        y = z − h(x̂)  
+        (normalize angle)
+
+        S = H · P · Hᵀ + R  
+        K = P · Hᵀ · S⁻¹  
+
+        x̂ = x̂ + K · y  
+        P = (I − K · H) · P  
+
+---
+
+## 6. Noise Model
+
+        R = diag([0.3², 0.03², 0.3²])
+
+---
+
+## 7. LiDAR Update
+
+        z = [px, py]
+
+        Uses standard linear KF update.
+
+---
+
