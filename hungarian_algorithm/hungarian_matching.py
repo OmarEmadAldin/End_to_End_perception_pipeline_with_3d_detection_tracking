@@ -61,8 +61,8 @@ class CrossSensorFusion:
                 rp, dist = radar_matches[i]
                 obj['radar_x']    = rp['x']
                 obj['radar_y']    = rp['y']
-                obj['radar_vx']   = rp['vx']
-                obj['radar_vy']   = rp['vy']
+                obj['radar_vx']   = rp.get('vx')
+                obj['radar_vy']   = rp.get('vy')
                 obj['radar_rho']    = rp.get('rho')
                 obj['radar_phi']    = rp.get('phi')
                 obj['radar_rhodot'] = rp.get('rhodot')
@@ -75,12 +75,22 @@ class CrossSensorFusion:
     def _project_points(self,point_global, calib , ego , K):
         proj = []
         for i in point_global:
-            p_global = np.array([i['x'], i['y'], 0.0]) #neglect the z and make it 1d vecctor
+            if 'x' in i and 'y' in i:
+                x, y = i['x'], i['y']
+            elif 'rho' in i and 'phi' in i:
+                # polar-only radar point (--ekf --polar mode) -> derive Cartesian for projection
+                x = i['rho'] * np.cos(i['phi'])
+                y = i['rho'] * np.sin(i['phi'])
+            else:
+                continue  # can't locate this point, skip it
+
+            p_global = np.array([x, y, 0.0]) #neglect the z and make it 1d vecctor
             p_cam = global_to_sensor(p_global , calib , ego)
             uv = project_to_image(p_cam , K)
             if uv is not None:
-                proj.append((uv,i))
-                
+                point = i if ('x' in i and 'y' in i) else {**i, 'x': x, 'y': y}
+                proj.append((uv, point))
+
         return proj
     
     def _assign(self, dets, projected, gate):
