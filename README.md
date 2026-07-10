@@ -201,9 +201,9 @@ Uses a HuggingFace **SegFormer** model fine-tuned on Cityscapes (`nvidia/segform
     <td align="center"><b>Road Surroundings Det</b></td>
   </tr>
   <tr>
-    <td><img src="camera_pipeline/lane_line_det/output/output.gif" width="32%" alt="Image 1"></td>
-    <td><img src="camera_pipeline/semantic_seg_SegFormer/output/output.gif" width="32%" alt="Image 2"></td>
-    <td><img src="camera_pipeline/general_detection_yolo_model/output/output.gif" width="32%" alt="Image 3"></td>
+    <td><img src="camera_pipeline/lane_line_det/output/output.gif" width="100%" alt="Image 1"></td>
+    <td><img src="camera_pipeline/semantic_seg_SegFormer/output/output.gif" width="100%" alt="Image 2"></td>
+    <td><img src="camera_pipeline/general_detection_yolo_model/output/output.gif" width="100%" alt="Image 3"></td>
   </tr>
 </table>
 
@@ -227,7 +227,7 @@ Runs a **PointPillars** 3D object detector (via `mmdetection3d`'s `init_model` /
   </tr>
   <tr>
     <td><img src="lidar_3d_det/output/output__.gif" width="50%" alt="Image 2"></td>
-    <td><img src="lidar_3d_det/output/out.gif" width="60%" alt="Image 3"></td>
+    <td><img src="lidar_3d_det/output/out.gif" width="100%" alt="Image 3"></td>
   </tr>
 </table>
 
@@ -256,8 +256,8 @@ Reads every `RADAR_FRONT` `.pcd` sweep with `nuscenes-devkit`'s `RadarPointCloud
     <td align="center"><b>Radar Vel plot</b></td>
   </tr>
   <tr>
-    <td><img src="radar_preprocessing/output_p.gif" width="50%" alt="Image 2"></td>
-    <td><img src="radar_preprocessing/output.gif" width="50%" alt="Image 3"></td>
+    <td><img src="radar_preprocessing/output_p.gif" width="100%" alt="Image 2"></td>
+    <td><img src="radar_preprocessing/output.gif" width="100%" alt="Image 3"></td>
   </tr>
 </table>
 
