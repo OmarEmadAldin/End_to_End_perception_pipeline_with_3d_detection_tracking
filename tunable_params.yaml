@@ -1,0 +1,41 @@
+# tracking_config.yaml
+
+kalman_filter:
+tracker:
+LIDAR_GATE_M: 3.0        # meters
+RADAR_GATE_M: 5.0        # meters
+CAMERA_GATE_PX: 80       # pixels
+
+```
+MAX_MISS_SEC: 1.0        # seconds before track deletion
+SCENE_BREAK_SEC: 5.0     # seconds to reset all tracks
+
+MIN_LIDAR_SCORE: 0.3     # confidence threshold to initialize new track
+```
+
+noise:
+q_var: 1.0               # process noise (increase for faster motion tracking)
+
+```
+R_LIDAR:                 # measurement noise (cartesian)
+  - [0.25, 0.0]
+  - [0.0, 0.25]
+
+R_RADAR:                 # measurement noise (cartesian)
+  - [1.0, 0.0, 0.0, 0.0]
+  - [0.0, 1.0, 0.0, 0.0]
+  - [0.0, 0.0, 1.0, 0.0]
+  - [0.0, 0.0, 0.0, 1.0]
+
+R_RADAR_POLAR:           # measurement noise (polar: rho, phi, rho_dot)
+  - [1.0, 0.0, 0.0]
+  - [0.0, 0.1, 0.0]
+  - [0.0, 0.0, 1.0]
+```
+
+hungarian_matching:
+LIDAR_GATE_PX: 60          # pixel gating for projected LiDAR
+RADAR_GATE_PX: 100         # looser gating for radar
+
+evaluation:
+threshold_m: 2.0           # distance threshold for TP matching (meters)
