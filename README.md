@@ -13,20 +13,17 @@ Maybe the results of the evaluation not that good but it can be optimized.
 3. [Architecture](#architecture)
 4. [Repository Structure](#repository-structure)
 5. [Data: nuScenes](#data-nuscenes)
-6. [Pipeline Stage 1 — Per-Sensor Detection](#pipeline-stage-1--per-sensor-detection)
+6. [Installation](#installation)
+7. [Usage](#usage)
+8. [Pipeline Stage 1 — Per-Sensor Detection](#pipeline-stage-1--per-sensor-detection)
    - [Camera Pipeline](#camera-pipeline)
    - [LiDAR Pipeline](#lidar-pipeline)
    - [Radar Pipeline](#radar-pipeline)
-7. [Pipeline Stage 2 — Geometric Fusion & Timeline Construction](#pipeline-stage-2--geometric-fusion--timeline-construction)
-8. [Pipeline Stage 3 — Cross-Sensor Association (Hungarian Algorithm)](#pipeline-stage-3--cross-sensor-association-hungarian-algorithm)
-9. [Pipeline Stage 4 — Multi-Object Tracking (Kalman Filter / EKF)](#pipeline-stage-4--multi-object-tracking-kalman-filter--ekf)
-10. [Pipeline Stage 5 — Evaluation](#pipeline-stage-5--evaluation)
-11. [Pipeline Stage 6 — Visualization](#pipeline-stage-6--visualization)
-12. [Installation](#installation)
-13. [Usage](#usage)
-14. [Output Artifacts](#output-artifacts)
-15. [Tunable Parameters](#tunable-parameters)
-
+9. [Pipeline Stage 2 — Geometric Fusion & Timeline Construction](#pipeline-stage-2--geometric-fusion--timeline-construction)
+10. [Pipeline Stage 3 — Cross-Sensor Association (Hungarian Algorithm)](#pipeline-stage-3--cross-sensor-association-hungarian-algorithm)
+11. [Pipeline Stage 4 — Multi-Object Tracking (Kalman Filter / EKF)](#pipeline-stage-4--multi-object-tracking-kalman-filter--ekf)
+12. [Pipeline Stage 5 — Evaluation](#pipeline-stage-5--evaluation)
+13. [Output Artifacts](#output-artifacts)
 ---
 
 ## Overview
@@ -150,7 +147,8 @@ tracks_output.json
 │   └── evaluator.py                         # Evaluator — aligns tracks to nuScenes GT annotations, scores them
 │
 └── visualization/
-    └── visualizer.py                        
+│    └── visualizer.py
+└── tunable_params.yaml                      # this file existed to contain all the tunable params better tp use it in code and easier for tuning                        
 ```
 
 ## Data: nuScenes
@@ -170,6 +168,59 @@ This project is built around the **nuScenes `v1.0-mini`** dataset. It expects th
 **The data contains more than camera_front and radar_front it has 5 folders for the camera but i though using all of them will require panoramic image and BEV for them and then the fusion will be harder so i tried to simplify it as the main purpose of the code were educational.**
 
 All coordinate transforms (sensor → ego → global) follow the standard nuScenes convention: rotations are quaternions `[w, x, y, z]`, and each sensor reading is first rotated/translated into the ego frame using `calibrated_sensor`, then into the global frame using `ego_pose`.
+
+---
+
+
+## Installation
+
+```bash
+python -m venv venv
+source venv/bin/activate        # Windows: venv\Scripts\activate
+pip install -r requirements.txt
+
+```
+
+## Usage
+
+```bash
+# 1) Per-sensor detection (each writes its own detections JSON — see "Configuration & Paths" for
+#    where to point input/output folders)
+python -m camera_pipeline.general_detection_yolo_model.yolo_detector      # → detections_xy.json (camera)
+python -m lidar_3d_det.3d_det_pointpillar                                  # → detections_xy.json (lidar)
+python -m radar_preprocessing.radar_preprocessing_ete                      # → radar_all_frames.json
+
+# 2) Build the unified, calibration-aligned event timeline
+python -m geometric_fusion.timeline                                        # → data_with_timestamps.json
+
+# 3) Run tracking + evaluation + visualization
+python main.py --ekf --polar
+```
+
+### `main.py` CLI flags
+
+| Flag | Effect |
+|---|---|
+| `--ekf` | Use the Extended Kalman Filter instead of the Linear KF |
+| `--polar` | Use radar's native polar measurements (`rho, phi, rhodot`) in the EKF radar update — **requires `--ekf`** |
+| `--no-eval` | Skip MOT evaluation against ground truth |
+| `--no-viz` | Skip generating the camera tracking overlay video |
+
+Examples:
+
+```bash
+# Linear KF, radar fed in as Cartesian (x, y, vx, vy)
+python main.py
+
+# EKF, radar fed in as Cartesian (still uses the EKF class, but the linear/Cartesian update path)
+python main.py --ekf
+
+# EKF with native polar radar measurements — the physically correct radar model
+python main.py --ekf --polar
+
+# Just run tracking, skip evaluation/video (e.g. while iterating on gates/thresholds)
+python main.py --ekf --polar --no-eval --no-viz
+```
 
 ---
 
@@ -432,100 +483,22 @@ Vanilla Kalman
 }
 ``` 
 
-## Pipeline Stage 6 — Visualization
-
-**`visualization/visualizer.py`** provides three rendering utilities:
-
-- **`camera_overlay(...)` / `camera_overlay_video(...)`** — the primary output. For each camera frame (or the full sequence, exported as an `.mp4` via `cv2.VideoWriter`), it:
-  - Draws faint dotted boxes for **raw, unfused** camera detections (using an approximate fixed pixel size per class, `DET_BOX_PX`, since raw 2D detections here carry only a center point) — useful for visually confirming what fusion did/didn't associate.
-  - For every track with at least `min_updates` sensor updates, builds an oriented **3D cuboid** in the global frame using a per-class dimension table (`CLASS_DIMS`, e.g. a car is `4.5m × 1.8m × 1.5m`) and a heading estimated from the track's velocity vector (`_yaw_from_velocity`), projects its 8 corners into the image, and draws the wireframe (front face emphasized) plus its 2D projected bounding box.
-  - Draws a colored circle at the track's projected center, its ID label, and a velocity arrow.
-  - Colors are assigned deterministically per track ID so the same object keeps the same color across frames.
-
-
-## Installation
-
-```bash
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
-pip install -r requirements.txt
-
-```
-
-## Usage
-
-```bash
-# 1) Per-sensor detection (each writes its own detections JSON — see "Configuration & Paths" for
-#    where to point input/output folders)
-python -m camera_pipeline.general_detection_yolo_model.yolo_detector      # → detections_xy.json (camera)
-python -m lidar_3d_det.3d_det_pointpillar                                  # → detections_xy.json (lidar)
-python -m radar_preprocessing.radar_preprocessing_ete                      # → radar_all_frames.json
-
-# 2) Build the unified, calibration-aligned event timeline
-python -m geometric_fusion.timeline                                        # → data_with_timestamps.json
-
-# 3) Run tracking + evaluation + visualization
-python main.py --ekf --polar
-```
-
-### `main.py` CLI flags
-
-| Flag | Effect |
-|---|---|
-| `--ekf` | Use the Extended Kalman Filter instead of the Linear KF |
-| `--polar` | Use radar's native polar measurements (`rho, phi, rhodot`) in the EKF radar update — **requires `--ekf`** |
-| `--no-eval` | Skip MOT evaluation against ground truth |
-| `--no-viz` | Skip generating the camera tracking overlay video |
-
-Examples:
-
-```bash
-# Linear KF, radar fed in as Cartesian (x, y, vx, vy)
-python main.py
-
-# EKF, radar fed in as Cartesian (still uses the EKF class, but the linear/Cartesian update path)
-python main.py --ekf
-
-# EKF with native polar radar measurements — the physically correct radar model
-python main.py --ekf --polar
-
-# Just run tracking, skip evaluation/video (e.g. while iterating on gates/thresholds)
-python main.py --ekf --polar --no-eval --no-viz
-```
-
 
 ## Output Artifacts
-
-All outputs are written to `OUTPUT_DIR` (see `_helper.py`):
 
 | File | Description |
 |---|---|
 | `tracks_output.json` | Every finalized track: ID, class, number of updates, birth timestamp, final `(x, y, vx, vy)` state, and the full per-update history (sensor, timestamp, state snapshot) |
 | `evaluation_results.json` | `MOTA`, `IDS`, `TP`, `FP`, `FN`, `Recall`, `Precision`, `F1`, `Total_GT` |
-| `tracking_video.mp4` | Camera video with projected 3D track cuboids, IDs, and velocity vectors overlaid |
 
-## Tunable Parameters
 
-These constants are the main levers for trading off precision vs. recall / track stability:
-
-**`kalman_filter/tracker.py`**
-
-| Constant | Default | Meaning |
-|---|---|---|
-| `LIDAR_GATE_M` | 3.0 m | Max distance for a LiDAR detection to match an existing track |
-| `RADAR_GATE_M` | 5.0 m | Max distance for a radar detection to match an existing track |
-| `CAMERA_GATE_PX` | 80 px | Max pixel distance for a camera detection to confirm a track |
-| `MAX_MISS_SEC` | 1.0 s | A track is dropped if it goes unupdated for longer than this |
-| `SCENE_BREAK_SEC` | 5.0 s | A timestamp gap larger than this flushes all active tracks (new scene) |
-| `MIN_LIDAR_SCORE` | 0.3 | Minimum detector confidence required to spawn a new track |
-
-**`hungarian_algorithm/hungarian_matching.py`**
-
-| Constant | Default | Meaning |
-|---|---|---|
-| `LIDAR_GATE_PX` | 60 px | Max pixel distance to associate a projected LiDAR point with a camera detection |
-| `RADAR_GATE_PX` | 100 px | Same, for radar (looser due to radar's angular sparsity/noise) |
-
-**`kalman_filter/linear_kf.py` / `ekf.py`** — process noise (`q_var`) and measurement noise (`R_LIDAR`, `R_RADAR`, `R_RADAR_POLAR`) — tune these if tracks lag behind fast-moving objects (increase `Q`) or jitter too much on noisy detections (increase `R`).
-
-**`evaluation/evaluator.py` / `metrics.py`** — `threshold_m` (default 2.0 m) controls how close a predicted track must be to a GT box to count as a true positive.
+<table>
+  <tr>
+    <td align="center"><b>Linear (Vanilla) Kalman Output </b></td>
+    <td align="center"><b>EKF Kalman Output</b></td>
+  </tr>
+  <tr>
+    <td><img src="Output/Final_tracking_Linear/outputLinear.gif" width="100%" alt="Image 1"></td>
+    <td><img src="Output/Final_tracking_EKF/outputEKF.gif" width="100%" alt="Image 2"></td>
+  </tr>
+</table>
