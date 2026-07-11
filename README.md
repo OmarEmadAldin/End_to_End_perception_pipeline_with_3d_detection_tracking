@@ -4,6 +4,11 @@ A complete perception pipeline that fuses **camera**, **LiDAR**, and **radar** d
 
 Maybe the results of the evaluation not that good but it can be optimized.
 
+<video src="https://github.com/OmarEmadAldin/End_to_End_perception_pipeline_with_3d_detection_tracking/blob/main/Output/output.mp4" width="100%" controls></video>
+
+<video src="Output/output.mp4" width="100%" controls></video>
+
+
 ---
 
 ## Table of Contents
